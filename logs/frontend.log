@@ -1,0 +1,11 @@
+
+> frontend@1.0.0 dev
+> vite
+
+Re-optimizing dependencies because vite config has changed
+Port 5173 is in use, trying another one...
+
+  VITE v5.4.17  ready in 824 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose

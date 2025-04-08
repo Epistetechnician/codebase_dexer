@@ -1,0 +1,7 @@
+pyenv: uvicorn: command not found
+
+The `uvicorn' command exists in these Python versions:
+  3.12.0
+
+Note: See 'pyenv help global' for tips on allowing both
+      python2 and python3 to be found.

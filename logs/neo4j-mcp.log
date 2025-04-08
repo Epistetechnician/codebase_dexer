@@ -1,0 +1,3 @@
+error: Cannot find module 'dotenv/config' from '/Users/shaanp/Documents/GitHub/codebase_dexer/mcp_server/neo4j-mcp/index.ts'
+
+Bun v1.2.8 (macOS arm64)
