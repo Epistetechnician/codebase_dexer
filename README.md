@@ -64,7 +64,7 @@ The MCP Code Indexer consists of several integrated components:
 
 ## 📷 Screenshots
 
-![Code Graph Visualization](mvp/frontend/public/code-graph-example.png)
+![Code Graph Visualization](mvp/tests/dme.png)
 
 ## 🔨 Development
 
