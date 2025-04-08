@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FolderOpenIcon, PlusIcon, CodeIcon, ClockIcon } from 'lucide-react';
+import { FolderOpenIcon, PlusIcon, CodeIcon, ClockIcon, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { IndexingSettings } from '@/components/IndexingSettings';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface CodebaseData {
   id: string;
@@ -24,6 +25,7 @@ export function HomePage() {
   const [isIndexing, setIsIndexing] = useState(false);
   const [indexingProgress, setIndexingProgress] = useState(0);
   const [selectedCodebase, setSelectedCodebase] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('path');
   const navigate = useNavigate();
 
   // Function to fetch saved codebases
@@ -88,6 +90,12 @@ export function HomePage() {
   const handleAddCodebase = async () => {
     if (!newRepoPath) return;
     
+    // If on the path tab, switch to settings tab when "Next" is clicked
+    if (activeTab === 'path') {
+      setActiveTab('settings');
+      return;
+    }
+    
     setIsIndexing(true);
     setIndexingProgress(0);
     
@@ -147,6 +155,7 @@ export function HomePage() {
             setIsIndexing(false);
             setIsAddDialogOpen(false);
             setNewRepoPath('');
+            setActiveTab('path'); // Reset to first tab for next time
           }
         }, 1000);
       } else {
@@ -168,112 +177,183 @@ export function HomePage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Code Explorer</h1>
-          <p className="text-muted-foreground">Explore and analyze your code repositories</p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 text-slate-50">
+      <div className="container mx-auto py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Code Explorer</h1>
+            <p className="text-slate-400">Explore and analyze your code repositories</p>
+          </div>
+          
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 bg-slate-800 hover:bg-slate-700">
+                <PlusIcon className="h-4 w-4" />
+                Add Codebase
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-3xl">
+              <DialogHeader>
+                <DialogTitle className="text-white">Add New Codebase</DialogTitle>
+                <DialogDescription className="text-slate-400">
+                  Enter the path to the code repository you want to analyze.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full py-4">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-800">
+                  <TabsTrigger value="path">Repository Path</TabsTrigger>
+                  <TabsTrigger value="settings">Indexing Settings</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="path" className="space-y-4 mt-4">
+                  <div className="space-y-4">
+                    <p className="text-sm text-slate-400">
+                      Enter the local path to your repository
+                    </p>
+                    <Input 
+                      placeholder="/path/to/repository" 
+                      value={newRepoPath} 
+                      onChange={(e) => setNewRepoPath(e.target.value)}
+                      disabled={isIndexing}
+                      className="bg-slate-800 border-slate-700 focus:border-slate-600"
+                    />
+                    
+                    {isIndexing && (
+                      <div className="mt-4">
+                        <p className="mb-2 text-sm text-slate-300">Indexing repository... {indexingProgress}%</p>
+                        <Progress value={indexingProgress} className="h-2 bg-slate-800" />
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="settings" className="mt-4">
+                  {newRepoPath ? (
+                    <IndexingSettings repositoryPath={newRepoPath} />
+                  ) : (
+                    <div className="p-8 text-center text-slate-400">
+                      Please enter a repository path first
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+              
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsAddDialogOpen(false)} 
+                  disabled={isIndexing}
+                  className="bg-transparent border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAddCodebase} 
+                  disabled={!newRepoPath || isIndexing}
+                  className="bg-teal-700 hover:bg-teal-600 text-white"
+                >
+                  {isIndexing ? 'Indexing...' : activeTab === 'path' ? 'Next' : 'Add & Index'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <PlusIcon className="h-4 w-4" />
-              Add Codebase
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Codebase</DialogTitle>
-              <DialogDescription>
-                Enter the path to the code repository you want to analyze.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="py-4">
-              <Input 
-                placeholder="/path/to/repository" 
-                value={newRepoPath} 
-                onChange={(e) => setNewRepoPath(e.target.value)}
-                disabled={isIndexing}
-              />
-              
-              {isIndexing && (
-                <div className="mt-4">
-                  <p className="mb-2 text-sm">Indexing repository... {indexingProgress}%</p>
-                  <Progress value={indexingProgress} className="h-2" />
-                </div>
-              )}
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} disabled={isIndexing}>
-                Cancel
-              </Button>
-              <Button onClick={handleAddCodebase} disabled={!newRepoPath || isIndexing}>
-                {isIndexing ? 'Indexing...' : 'Add & Index'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {savedCodebases.map((codebase) => (
-          <Card key={codebase.id} className={`mb-4 ${selectedCodebase === codebase.id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedCodebase(codebase.id)}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="flex items-center space-x-2">
-                <FolderOpenIcon className="h-5 w-5" />
-                <CardTitle className="text-lg">{codebase.name}</CardTitle>
-              </div>
-              <div className="flex space-x-2">
-                <IndexingSettings repositoryPath={codebase.path} />
-                <Button variant="outline" size="sm" onClick={() => handleOpenCodebase(codebase.path)}>Open</Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className="text-xs text-muted-foreground mt-1">{codebase.path}</CardDescription>
-              <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {savedCodebases.map((codebase) => (
+            <Card 
+              key={codebase.id} 
+              className={`mb-4 bg-slate-800 border-slate-700 hover:border-slate-600 transition-all ${selectedCodebase === codebase.id ? 'ring-2 ring-teal-500' : ''}`} 
+              onClick={() => setSelectedCodebase(codebase.id)}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b border-slate-700">
                 <div className="flex items-center space-x-2">
-                  <CodeIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{codebase.fileCount} files</span>
+                  <FolderOpenIcon className="h-5 w-5 text-teal-500" />
+                  <CardTitle className="text-lg text-white">{codebase.name}</CardTitle>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <ClockIcon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">Last indexed: {formatDate(codebase.lastOpened)}</span>
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleOpenCodebase(codebase.path)}
+                    className="bg-transparent border-slate-700 text-slate-300 hover:bg-slate-700"
+                  >
+                    Open
+                  </Button>
                 </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between pt-0">
-              {codebase.indexProgress < 100 ? (
-                <div className="w-full">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span>Indexing...</span>
-                    <span>{codebase.indexProgress}%</span>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <CardDescription className="text-xs text-slate-400 mt-1">{codebase.path}</CardDescription>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="flex items-center space-x-2">
+                    <CodeIcon className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-300">{codebase.fileCount} files</span>
                   </div>
-                  <Progress value={codebase.indexProgress} className="h-2" />
+                  <div className="flex items-center space-x-2">
+                    <ClockIcon className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-300">Last indexed: {formatDate(codebase.lastOpened)}</span>
+                  </div>
                 </div>
-              ) : null}
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      
-      {savedCodebases.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="rounded-full bg-muted p-6 mb-4">
-            <CodeIcon className="h-10 w-10 text-muted-foreground" />
-          </div>
-          <h3 className="text-xl font-medium mb-2">No Codebases Found</h3>
-          <p className="text-muted-foreground mb-6 max-w-md">
-            Get started by adding a codebase to analyze its structure and relationships.
-          </p>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
-            <PlusIcon className="h-4 w-4" />
-            Add Your First Codebase
-          </Button>
+              </CardContent>
+              <CardFooter className="flex justify-between pt-0">
+                {codebase.indexProgress < 100 ? (
+                  <div className="w-full">
+                    <div className="flex justify-between text-xs mb-1 text-slate-400">
+                      <span>Indexing...</span>
+                      <span>{codebase.indexProgress}%</span>
+                    </div>
+                    <Progress value={codebase.indexProgress} className="h-2 bg-slate-700" />
+                  </div>
+                ) : (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full text-sm text-slate-400 hover:text-slate-300 hover:bg-slate-700"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Indexing Settings
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 max-w-[625px] max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle className="text-white">Repository Indexing Settings</DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                          Configure which files and directories should be indexed for {codebase.name}.
+                        </DialogDescription>
+                      </DialogHeader>
+                      
+                      <IndexingSettings repositoryPath={codebase.path} />
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
         </div>
-      )}
+        
+        {savedCodebases.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-slate-800/50 rounded-lg border border-slate-700">
+            <div className="rounded-full bg-slate-700 p-6 mb-4">
+              <CodeIcon className="h-10 w-10 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-medium mb-2 text-white">No Codebases Found</h3>
+            <p className="text-slate-400 mb-6 max-w-md">
+              Get started by adding a codebase to analyze its structure and relationships.
+            </p>
+            <Button 
+              onClick={() => setIsAddDialogOpen(true)} 
+              className="gap-2 bg-teal-700 hover:bg-teal-600 text-white"
+            >
+              <PlusIcon className="h-4 w-4" />
+              Add Your First Codebase
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

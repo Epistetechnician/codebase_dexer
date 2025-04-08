@@ -5,7 +5,7 @@ import { CodeExplorer } from '@/pages/CodeExplorer';
 
 export function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="code-explorer-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="code-explorer-theme">
       <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
